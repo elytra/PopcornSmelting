@@ -1,0 +1,16 @@
+[
+{
+  "modid": "popcornsmelting",
+  "name": "Popcorn Smelting",
+  "description": "Re-adds popcorn smelting from Indev. Drop an item in fire or lava to smelt it.",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "https://minecraft.curseforge.com/projects/popcorn-smelting",
+  "updateJSON": "",
+  "authorList": ["Una Thompson (unascribed)"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]

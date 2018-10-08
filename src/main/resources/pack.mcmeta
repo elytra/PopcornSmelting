@@ -1,0 +1,12 @@
+{
+	"pack": {
+		"pack_format": 3,
+		"description": "Popcorn Smelting resources"
+	},
+	"language": {
+		"raw": {
+			"name": "language.name",
+			"region": "language.region"
+		}
+	}
+}
