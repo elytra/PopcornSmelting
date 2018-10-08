@@ -13,7 +13,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
-@Mod(modid=PopcornSmelting.MODID, name=PopcornSmelting.NAME, version=PopcornSmelting.VERSION)
+@Mod(modid=PopcornSmelting.MODID, name=PopcornSmelting.NAME, version=PopcornSmelting.VERSION, acceptableRemoteVersions="*")
 public class PopcornSmelting {
 
 	public static final String MODID = "popcornsmelting";
