@@ -27,9 +27,26 @@ if (!ext.early) {
 repositories {
 	// the skeleton already defines mavenCentral, jcenter, and the Elytra repo
 	// will also have Shadowfacts' maven if the language is set to kotlin
+	maven {
+		url "http://maven.blamejared.com/"
+	}
+	maven {
+		url = 'https://dvs1.progwml6.com/files/maven'
+	}
 }
 
 dependencies {
+	compile 'CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.0.12.323'
+	
+	compile 'mezz.jei:jei_1.12.2:4.9.1.189'
+}
 
+
+jar {
+	manifest {
+		attributes (
+			'FMLAT': 'popcornsmelting_at.cfg'
+		)
+	}
 }
 }

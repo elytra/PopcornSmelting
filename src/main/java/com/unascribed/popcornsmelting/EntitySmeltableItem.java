@@ -1,13 +1,21 @@
 package com.unascribed.popcornsmelting;
 
+import com.unascribed.popcornsmelting.PopcornSmeltingRecipes.PopcornSmeltingResult;
+
 import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.item.EntityXPOrb;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 
 public class EntitySmeltableItem extends EntityItem {
 
-	private ItemStack result;
+	private PopcornSmeltingResult result;
+	private int bounces = -1;
+	private int cooldown = 10;
 	
 	public EntitySmeltableItem(World worldIn, double x, double y, double z, ItemStack stack) {
 		super(worldIn, x, y, z, stack);
@@ -21,33 +29,82 @@ public class EntitySmeltableItem extends EntityItem {
 		super(worldIn);
 	}
 	
-	public void setResult(ItemStack result) {
+	public void setResult(PopcornSmeltingResult result) {
 		this.result = result;
+	}
+	
+	@Override
+	public void onUpdate() {
+		super.onUpdate();
+		if (cooldown > 0) cooldown--;
 	}
 	
 	@Override
 	public boolean attackEntityFrom(DamageSource source, float amount) {
 		if (this.world.isRemote || this.isDead) return false;
 		if (source == DamageSource.LAVA || source == DamageSource.IN_FIRE) {
+			motionX = rand.nextGaussian()/10;
+			motionY = (bounces > 8 ? 0.45f : 0.25f);
+			motionZ = rand.nextGaussian()/10;
+			markVelocityChanged();
+			bounces++;
 			if (result != null) {
-				ItemStack copy = result.copy();
-				EntityItem resultEnt = new EntitySmeltableItem(world, posX, posY, posZ, copy);
-				resultEnt.setVelocity(rand.nextGaussian()/8, 0.25f, rand.nextGaussian()/8);
-				resultEnt.setDefaultPickupDelay();
-				setVelocity(rand.nextGaussian()/8, 0.25f, rand.nextGaussian()/8);
-				world.spawnEntity(resultEnt);
-				setFire(4);
-				resultEnt.setFire(2);
-				ItemStack remainder = getItem().copy();
-				remainder.shrink(1);
-				if (remainder.isEmpty()) {
-					setDead();
+				world.playSound(null, posX, posY, posZ, SoundEvents.BLOCK_LAVA_EXTINGUISH, SoundCategory.BLOCKS, 0.5f, 2.6f + (world.rand.nextFloat() - world.rand.nextFloat()) * 0.8F);
+				if (cooldown <= 0) {
+					cooldown = 10;
+					EntitySmeltableItem resultEnt = new EntitySmeltableItem(world, posX, posY, posZ);
+					if (getItem().getCount() > 1) {
+						ItemStack is = getItem().copy();
+						is.setCount(1);
+						resultEnt.setItem(is);
+						resultEnt.setResult(result);
+						bounces = 0;
+					} else if (bounces >= 2) {
+						resultEnt.setItem(result.stack.copy());
+						int totalExp = 1;
+	
+						if (result.exp == 0) {
+							totalExp = 0;
+						} else if (result.exp < 1) {
+							totalExp = MathHelper.floor(totalExp * result.exp);
+							if (totalExp < MathHelper.ceil(totalExp * result.exp) && Math.random() < (totalExp * result.exp - totalExp)) {
+								totalExp += 1;
+							}
+						}
+						
+						while (totalExp > 0) {
+							int amt = EntityXPOrb.getXPSplit(totalExp);
+							totalExp -= amt;
+							world.spawnEntity(new EntityFireproofXPOrb(world, posX, posY, posZ, amt));
+						}
+					} else {
+						return false;
+					}
+					resultEnt.motionX = rand.nextGaussian()/8;
+					resultEnt.motionY = 0.15f;
+					resultEnt.motionZ = rand.nextGaussian()/8;
+					resultEnt.setDefaultPickupDelay();
+					world.spawnEntity(resultEnt);
+					
+					setFire(4);
+					resultEnt.setFire(2);
+					ItemStack remainder = getItem().copy();
+					remainder.shrink(1);
+					if (remainder.isEmpty()) {
+						setDead();
+					}
+					setItem(remainder);
 				}
-				setItem(remainder);
 			}
 			return false;
 		}
 		return super.attackEntityFrom(source, amount);
+	}
+	
+	@Override
+	public boolean combineItems(EntityItem other) {
+		if (bounces > -1 && result != null) return false;
+		return super.combineItems(other);
 	}
 	
 	@Override
