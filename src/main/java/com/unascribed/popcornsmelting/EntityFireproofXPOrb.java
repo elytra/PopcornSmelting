@@ -17,7 +17,8 @@ public class EntityFireproofXPOrb extends EntityXPOrb {
 	@Override
 	public boolean attackEntityFrom(DamageSource source, float amount) {
 		if (this.world.isRemote || this.isDead) return false;
-		if (source == DamageSource.LAVA || source == DamageSource.IN_FIRE) {
+		FireproofItemBehavior behavior = FireproofItemBehavior.forDamageSource(source);
+		if (behavior != null && behavior.resistsFire()) {
 			motionX = rand.nextGaussian()/8;
 			motionY = 0.25f;
 			motionZ = rand.nextGaussian()/8;

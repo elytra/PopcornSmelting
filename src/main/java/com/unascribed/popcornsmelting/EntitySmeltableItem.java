@@ -42,13 +42,14 @@ public class EntitySmeltableItem extends EntityItem {
 	@Override
 	public boolean attackEntityFrom(DamageSource source, float amount) {
 		if (this.world.isRemote || this.isDead) return false;
-		if (source == DamageSource.LAVA || source == DamageSource.IN_FIRE) {
+		FireproofItemBehavior behavior = FireproofItemBehavior.forDamageSource(source);
+		if (behavior != null && behavior.resistsFire()) {
 			motionX = rand.nextGaussian()/10;
-			motionY = (bounces > 8 ? 0.45f : 0.25f);
+			motionY = (bounces > PopcornSmelting.bouncesToBounceHigher ? 0.45f : 0.2f);
 			motionZ = rand.nextGaussian()/10;
 			markVelocityChanged();
 			bounces++;
-			if (result != null) {
+			if (result != null && behavior.canSmelt()) {
 				world.playSound(null, posX, posY, posZ, SoundEvents.BLOCK_LAVA_EXTINGUISH, SoundCategory.BLOCKS, 0.5f, 2.6f + (world.rand.nextFloat() - world.rand.nextFloat()) * 0.8F);
 				if (cooldown <= 0) {
 					cooldown = 10;
@@ -58,8 +59,9 @@ public class EntitySmeltableItem extends EntityItem {
 						is.setCount(1);
 						resultEnt.setItem(is);
 						resultEnt.setResult(result);
+						resultEnt.bounces = 0;
 						bounces = 0;
-					} else if (bounces >= 2) {
+					} else if (bounces >= PopcornSmelting.bouncesToSmelt) {
 						resultEnt.setItem(result.stack.copy());
 						int totalExp = 1;
 	
@@ -104,6 +106,7 @@ public class EntitySmeltableItem extends EntityItem {
 	@Override
 	public boolean combineItems(EntityItem other) {
 		if (bounces > -1 && result != null) return false;
+		if (other.isBurning() || this.isBurning()) return false;
 		return super.combineItems(other);
 	}
 	

@@ -1,6 +1,7 @@
 package com.unascribed.popcornsmelting;
 
 import java.lang.reflect.Field;
+import java.util.Locale;
 
 import org.apache.commons.logging.LogFactory;
 
@@ -32,8 +33,12 @@ public class PopcornSmelting {
 		pickupDelay.setAccessible(true);
 		age.setAccessible(true);
 	}
-	
-	private boolean fireproofAll = false;
+
+	public static FireproofKind fireproof = FireproofKind.SMELTABLE_ONLY;
+	public static FireproofItemBehavior lavaBehavior = FireproofItemBehavior.SMELT;
+	public static FireproofItemBehavior fireBehavior = FireproofItemBehavior.SMELT;
+	public static int bouncesToSmelt = 2;
+	public static int bouncesToBounceHigher = 8;
 
 	private static final String INHERIT_DESC =
 			"If true, all furnace recipes will be valid popcorn smelting recipes.\n" +
@@ -47,15 +52,38 @@ public class PopcornSmelting {
 			"implicitly set this config setting to false for that session.";
 	
 	private static final String FIREPROOF_DESC = 
-			"If true, all items will be made fireproof, instead of just items that\n" +
-			"can be popcorn smelted.";
+			"What kinds of items should be made fireproof.\n" +
+			"Possible values: all, all_but_fuels, smeltable_only";
+	
+	private static final String BEHAVIOR_DESC =
+			"How dropped fireproof items should behave on $$.\n" +
+			"Possible values: smelt, bounce, burn";
+	
+	private static final String BEHAVIOR_FIRE_DESC = BEHAVIOR_DESC.replace("$$", "fire");
+	private static final String BEHAVIOR_LAVA_DESC = BEHAVIOR_DESC.replace("$$", "lava");
+	
+	private static final String BOUNCES_TO_SMELT_DESC =
+			"How many times a fireproof item must bounce before it smelts.\n" +
+			"Higher values encourage building smelters, lower values encourage\n" +
+			"ad-hoc usage with a flint-and-steel.";
+	
+	private static final String BOUNCES_TO_BOUNCE_HIGHER_DESC =
+			"How many times a fireproof item must bounce before it will start\n" +
+			"bouncing higher. Makes it easier to build autocollecting smelter pits.\n" +
+			"-1 disables this behavior.";
 	
 	@EventHandler
 	public void onPreInit(FMLPreInitializationEvent e) {
 		Configuration cfg = new Configuration(e.getSuggestedConfigurationFile());
 		cfg.load();
 		PopcornSmeltingRecipes.setInherit(cfg.getBoolean("inheritFurnaceRecipes", "General", true, INHERIT_DESC));
-		fireproofAll = cfg.getBoolean("fireproofAllItems", "General", false, FIREPROOF_DESC);
+		cfg.getCategory("General").remove("fireproofAllItems");
+		fireproof = FireproofKind.valueOf(cfg.getString("fireproof", "General", "smeltable_only", FIREPROOF_DESC).toUpperCase(Locale.ROOT));
+		fireBehavior = FireproofItemBehavior.valueOf(cfg.getString("fireBehavior", "General", "smelt", BEHAVIOR_FIRE_DESC).toUpperCase(Locale.ROOT));
+		lavaBehavior = FireproofItemBehavior.valueOf(cfg.getString("lavaBehavior", "General", "smelt", BEHAVIOR_LAVA_DESC).toUpperCase(Locale.ROOT));
+		bouncesToSmelt = cfg.getInt("bouncesToSmelt", "General", 2, 0, 128, BOUNCES_TO_SMELT_DESC);
+		bouncesToBounceHigher = cfg.getInt("bouncesToBounceHigher", "General", 8, -1, 128, BOUNCES_TO_BOUNCE_HIGHER_DESC);
+		if (bouncesToBounceHigher == -1) bouncesToBounceHigher = Integer.MAX_VALUE;
 		cfg.save();
 		EntityRegistry.registerModEntity(new ResourceLocation(MODID, "smeltable_item"), EntitySmeltableItem.class, "smeltable_item", 0, this, 64, 1, true);
 		EntityRegistry.registerModEntity(new ResourceLocation(MODID, "fireproof_xp_orb"), EntityFireproofXPOrb.class, "fireproof_xp_orb", 1, this, 64, 4, true);
@@ -68,7 +96,7 @@ public class PopcornSmelting {
 			EntityItem ei = (EntityItem)e.getEntity();
 			ItemStack is = ei.getItem();
 			PopcornSmeltingResult res = PopcornSmeltingRecipes.getResult(is);
-			if (res != null || fireproofAll) {
+			if (fireproof.shouldFireproof(is)) {
 				try {
 					e.setCanceled(true);
 					EntitySmeltableItem esi = new EntitySmeltableItem(ei.world, ei.posX, ei.posY, ei.posZ, is);
