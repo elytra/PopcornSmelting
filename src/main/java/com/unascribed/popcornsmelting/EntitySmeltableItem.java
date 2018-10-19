@@ -14,8 +14,8 @@ import net.minecraft.world.World;
 public class EntitySmeltableItem extends EntityItem {
 
 	private PopcornSmeltingResult result;
-	private int bounces = -1;
-	private int cooldown = 10;
+	private int bounces = PopcornSmelting.bouncesToSmelt == 0 ? 0 : -1;
+	private int cooldown = 0;
 	
 	public EntitySmeltableItem(World worldIn, double x, double y, double z, ItemStack stack) {
 		super(worldIn, x, y, z, stack);
