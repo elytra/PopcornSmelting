@@ -11,5 +11,3 @@ need to ask to use them. See the [LICENSE file](LICENSE) for more details.
 
 Drop an item in fire or lava, and it will be smelted.
 
-Not required on clients, just servers.
-
