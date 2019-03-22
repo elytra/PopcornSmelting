@@ -86,7 +86,8 @@ public class EntitySmeltableItem extends EntityItem {
 					resultEnt.motionY = 0.15f;
 					resultEnt.motionZ = rand.nextGaussian()/8;
 					resultEnt.setDefaultPickupDelay();
-					world.spawnEntity(resultEnt);
+					if((1f - PopcornSmelting.chanceToDestroyItem) >= rand.nextFloat())
+						world.spawnEntity(resultEnt);
 					
 					setFire(4);
 					resultEnt.setFire(2);
