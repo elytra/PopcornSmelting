@@ -39,6 +39,7 @@ public class PopcornSmelting {
 	public static FireproofItemBehavior fireBehavior = FireproofItemBehavior.SMELT;
 	public static int bouncesToSmelt = 2;
 	public static int bouncesToBounceHigher = 8;
+	public static float chanceToDestroyItem = 0f;
 
 	private static final String INHERIT_DESC =
 			"If true, all furnace recipes will be valid popcorn smelting recipes.\n" +
@@ -71,6 +72,9 @@ public class PopcornSmelting {
 			"How many times a fireproof item must bounce before it will start\n" +
 			"bouncing higher. Makes it easier to build autocollecting smelter pits.\n" +
 			"-1 disables this behavior.";
+
+	private static final String CHANCE_TO_DESTROY_DESC =
+			"What percentage of smelted items should be destroyed by the process\n";
 	
 	@EventHandler
 	public void onPreInit(FMLPreInitializationEvent e) {
@@ -83,6 +87,7 @@ public class PopcornSmelting {
 		lavaBehavior = FireproofItemBehavior.valueOf(cfg.getString("lavaBehavior", "General", "smelt", BEHAVIOR_LAVA_DESC).toUpperCase(Locale.ROOT));
 		bouncesToSmelt = cfg.getInt("bouncesToSmelt", "General", 2, 0, 128, BOUNCES_TO_SMELT_DESC);
 		bouncesToBounceHigher = cfg.getInt("bouncesToBounceHigher", "General", 8, -1, 128, BOUNCES_TO_BOUNCE_HIGHER_DESC);
+		chanceToDestroyItem = cfg.getFloat("chanceToDestroyItem", "General", 0f, 0f, 1f, CHANCE_TO_DESTROY_DESC);
 		if (bouncesToBounceHigher == -1) bouncesToBounceHigher = Integer.MAX_VALUE;
 		cfg.save();
 		EntityRegistry.registerModEntity(new ResourceLocation(MODID, "smeltable_item"), EntitySmeltableItem.class, "smeltable_item", 0, this, 64, 1, true);
